@@ -22,6 +22,7 @@ export default function FeedbackScreen() {
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
+          app: 'Words',
           email: user?.email ?? '',
           message: message.trim(),
         }),
