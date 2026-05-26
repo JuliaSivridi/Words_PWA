@@ -248,15 +248,16 @@
       <li><a href="#s5">Data Model</a></li>
       <li><a href="#s6">External Storage Schema (Google Sheets)</a></li>
       <li><a href="#s7">Authentication &amp; First-Launch Setup</a></li>
-      <li><a href="#s8">API Layer</a></li>
-      <li><a href="#s9">UI Screens</a></li>
-      <li><a href="#s10">Key Components</a></li>
-      <li><a href="#s11">Theme &amp; Colors</a></li>
-      <li><a href="#s12">Navigation &amp; Routes</a></li>
-      <li><a href="#s13">Loading &amp; Empty States</a></li>
-      <li><a href="#s14">Progressive Web App</a></li>
-      <li><a href="#s15">First-Time Setup (New Developer)</a></li>
-      <li><a href="#s16">Key Algorithms</a></li>
+      <li><a href="#s8">Onboarding Seed Data</a></li>
+      <li><a href="#s9">API Layer</a></li>
+      <li><a href="#s10">UI Screens</a></li>
+      <li><a href="#s11">Key Components</a></li>
+      <li><a href="#s12">Theme &amp; Colors</a></li>
+      <li><a href="#s13">Navigation &amp; Routes</a></li>
+      <li><a href="#s14">Loading &amp; Empty States</a></li>
+      <li><a href="#s15">Progressive Web App</a></li>
+      <li><a href="#s16">First-Time Setup (New Developer)</a></li>
+      <li><a href="#s17">Key Algorithms</a></li>
     </ol>
   </div>
 
@@ -543,8 +544,97 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     </tbody>
   </table>
 
-  <!-- ─── 8. API Layer ──────────────────────────────────────────────────── -->
-  <h1 id="s8">8. API Layer</h1>
+  <!-- ─── 8. Onboarding Seed Data ─────────────────────────────────────── -->
+  <h1 id="s8">8. Onboarding Seed Data</h1>
+
+  <p><code>seedNewSpreadsheet()</code> is called once immediately after a brand-new <code>db_words</code> spreadsheet is created. It writes all data via a single <code>values:batchUpdate</code> call with <code>valueInputOption: 'RAW'</code>.</p>
+
+  <h2>Tab <code>ENG-DEU</code> — header row</h2>
+  <table>
+    <thead><tr><th>Column A</th><th>Column B</th><th>Column C</th></tr></thead>
+    <tbody><tr><td><code>category</code></td><td><code>word</code></td><td><code>translation</code></td></tr></tbody>
+  </table>
+
+  <h2>Tab <code>ENG-DEU</code> — seed words (34 rows)</h2>
+
+  <h3>Category: Numbers (12 words)</h3>
+  <table>
+    <thead><tr><th>word (B)</th><th>translation (C)</th></tr></thead>
+    <tbody>
+      <tr><td>eins</td><td>one</td></tr>
+      <tr><td>zwei</td><td>two</td></tr>
+      <tr><td>drei</td><td>three</td></tr>
+      <tr><td>vier</td><td>four</td></tr>
+      <tr><td>fünf</td><td>five</td></tr>
+      <tr><td>sechs</td><td>six</td></tr>
+      <tr><td>sieben</td><td>seven</td></tr>
+      <tr><td>acht</td><td>eight</td></tr>
+      <tr><td>neun</td><td>nine</td></tr>
+      <tr><td>zehn</td><td>ten</td></tr>
+      <tr><td>elf</td><td>eleven</td></tr>
+      <tr><td>zwölf</td><td>twelve</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Category: Greetings (11 words)</h3>
+  <table>
+    <thead><tr><th>word (B)</th><th>translation (C)</th></tr></thead>
+    <tbody>
+      <tr><td>Hallo</td><td>Hello</td></tr>
+      <tr><td>Guten Morgen</td><td>Good morning</td></tr>
+      <tr><td>Guten Tag</td><td>Good day</td></tr>
+      <tr><td>Guten Abend</td><td>Good evening</td></tr>
+      <tr><td>Auf Wiedersehen</td><td>Goodbye</td></tr>
+      <tr><td>Tschüss</td><td>Bye</td></tr>
+      <tr><td>Bitte</td><td>Please</td></tr>
+      <tr><td>Danke</td><td>Thank you</td></tr>
+      <tr><td>Entschuldigung</td><td>Excuse me</td></tr>
+      <tr><td>Ja</td><td>Yes</td></tr>
+      <tr><td>Nein</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Category: Colors (11 words)</h3>
+  <table>
+    <thead><tr><th>word (B)</th><th>translation (C)</th></tr></thead>
+    <tbody>
+      <tr><td>rot</td><td>red</td></tr>
+      <tr><td>blau</td><td>blue</td></tr>
+      <tr><td>grün</td><td>green</td></tr>
+      <tr><td>gelb</td><td>yellow</td></tr>
+      <tr><td>schwarz</td><td>black</td></tr>
+      <tr><td>weiß</td><td>white</td></tr>
+      <tr><td>orange</td><td>orange</td></tr>
+      <tr><td>rosa</td><td>pink</td></tr>
+      <tr><td>lila</td><td>purple</td></tr>
+      <tr><td>braun</td><td>brown</td></tr>
+      <tr><td>grau</td><td>grey</td></tr>
+    </tbody>
+  </table>
+
+  <p>All seeded words have columns D–G empty (m1=0, m2=0, m3=0, learned=FALSE by default).</p>
+
+  <h2>Tab <code>_settings</code> — seed values</h2>
+  <table>
+    <thead><tr><th>key (A)</th><th>value (B)</th></tr></thead>
+    <tbody>
+      <tr><td><code>language</code></td><td><code>ENG-DEU</code></td></tr>
+      <tr><td><code>category</code></td><td><code>""</code></td></tr>
+      <tr><td><code>mode1</code></td><td><code>TRUE</code></td></tr>
+      <tr><td><code>mode2</code></td><td><code>TRUE</code></td></tr>
+      <tr><td><code>mode3</code></td><td><code>TRUE</code></td></tr>
+      <tr><td><code>stepsPerSession</code></td><td><code>12</code></td></tr>
+      <tr><td><code>m1Max</code></td><td><code>4</code></td></tr>
+      <tr><td><code>m2Max</code></td><td><code>8</code></td></tr>
+      <tr><td><code>m3Max</code></td><td><code>12</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>First-run user experience</h2>
+  <p>After the seed is written the user lands on HomeScreen with language <code>ENG-DEU</code> pre-selected (read back from <code>_settings</code>). They can press <strong>Start</strong> immediately and begin practising German vocabulary — the three categories give enough words for all three learning modes to become available as counters accumulate.</p>
+
+  <!-- ─── 9. API Layer ──────────────────────────────────────────────────── -->
+  <h1 id="s9">9. API Layer</h1>
 
   <p>All calls go through <code>request(url, options)</code> in <code>sheetsApi.js</code>: calls <code>refreshTokenIfNeeded()</code>, attaches <code>Authorization: Bearer &lt;token&gt;</code>, throws <code>Error('API error {status}: {body}')</code> on non-OK.</p>
 
@@ -570,16 +660,16 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   </div>
 
   <!-- ─── 9. Screens ────────────────────────────────────────────────────── -->
-  <h1 id="s9">9. UI Screens</h1>
+  <h1 id="s10">10. UI Screens</h1>
 
-  <h2 id="s9-1">9.1 LoginScreen</h2>
+  <h2 id="s10-1">10.1 LoginScreen</h2>
   <p><strong>Route:</strong> Not a route — rendered by <code>App.jsx</code> when <code>user === null</code><br>
   <strong>Props:</strong> <code>onLogin: () =&gt; void</code><br>
   <strong>State:</strong> <code>loading</code> (bool), <code>error</code> (string|null)</p>
   <p><strong>Layout:</strong> Centered card — horizontal logo row (icon-192.png + "Words" h1 + tagline "Learn vocabulary with flashcards"), two description lines, "Sign in with Google" button (shows spinner while loading).</p>
   <p><strong>Action:</strong> Button → <code>signInWithPopup()</code> → <code>onLogin()</code> on success; "Sign in failed. Please try again." on error.</p>
 
-  <h2 id="s9-2">9.2 HomeScreen</h2>
+  <h2 id="s10-2">10.2 HomeScreen</h2>
   <p><strong>Route:</strong> <code>/</code><br>
   <strong>Props:</strong> <code>sheetId</code>, <code>currentLang</code>, <code>currentCategory</code>, <code>onSignOut</code></p>
   <p><strong>Layout:</strong> Top bar ("Words" left + avatar button right) + content area (max-width 600px, 16px padding):</p>
@@ -594,7 +684,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   </table>
   <p>Avatar opens dropdown: user name + email header, then Settings / Help / Feedback / Sign Out. Closes on outside <code>mousedown</code>/<code>touchstart</code>.</p>
 
-  <h2 id="s9-3">9.3 SessionScreen</h2>
+  <h2 id="s10-3">10.3 SessionScreen</h2>
   <p><strong>Route:</strong> <code>/session</code> — redirects to <code>/</code> if <code>!sheetId &#124;&#124; !currentLang</code><br>
   <strong>Props:</strong> <code>sheetId</code>, <code>tab</code>, <code>words</code>, <code>categoryFilter</code>, <code>settings</code>, <code>onSessionComplete</code><br>
   <strong>Refs:</strong> <code>pendingUpdates</code> (Map), <code>sessionBuilt</code> (guard — prevents session rebuild when words updates after save)</p>
@@ -619,7 +709,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     </tbody>
   </table>
 
-  <h2 id="s9-4">9.4 WordListScreen</h2>
+  <h2 id="s10-4">10.4 WordListScreen</h2>
   <p><strong>Route:</strong> <code>/words</code> — redirects to <code>/</code> if <code>!sheetId &#124;&#124; !currentLang</code><br>
   <strong>Props:</strong> <code>words</code>, <code>loading</code>, <code>categoryFilter</code>, <code>onToggleLearned</code></p>
   <p><strong>Sticky header:</strong> "← Back" | "Word List" + filter label | learned count <code>"{learned} / {total}"</code></p>
@@ -633,18 +723,18 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     </tbody>
   </table>
 
-  <h2 id="s9-5">9.5 LanguageScreen</h2>
+  <h2 id="s10-5">10.5 LanguageScreen</h2>
   <p><strong>Route:</strong> <code>/language</code><br>
   <strong>Props:</strong> <code>sheetId</code>, <code>currentLang</code>, <code>onSelect</code>, <code>onReconnect</code></p>
   <p>Fetches tabs on mount via <code>getLanguageTabs()</code>. Formats as <code>"{StudyLang} ({NativeLang})"</code> using <code>parseLangLabel()</code>. Each item shows formatted name + raw code + <code>&lt;CheckIcon&gt;</code> if current.</p>
   <p><strong>Empty state:</strong> "No language sheets found." + instructions + "Reconnect to sheet" button (clears <code>localStorage.words_sheet_id</code>, re-triggers discovery).</p>
 
-  <h2 id="s9-6">9.6 CategoryScreen</h2>
+  <h2 id="s10-6">10.6 CategoryScreen</h2>
   <p><strong>Route:</strong> <code>/category</code> — redirects to <code>/</code> if <code>!sheetId &#124;&#124; !currentLang</code><br>
   <strong>Props:</strong> <code>words</code>, <code>currentCategory</code>, <code>onSelect</code></p>
   <p>Categories derived from <code>words[].category</code> (non-empty), sorted alphabetically. Multi-select with "All categories" toggle. <strong>← Back saves</strong>: all/none selected → <code>onSelect(null)</code>; otherwise → <code>onSelect([…selected])</code>.</p>
 
-  <h2 id="s9-7">9.7 SettingsScreen</h2>
+  <h2 id="s10-7">10.7 SettingsScreen</h2>
   <p><strong>Route:</strong> <code>/settings</code><br>
   <strong>Props:</strong> <code>settings</code>, <code>onChange</code>, <code>sheetId</code>, <code>sheetName</code>, <code>onChangeSheet</code></p>
 
@@ -663,18 +753,18 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <p>At least one mode must remain active — toggling the last active mode shows Toast "At least one mode must be active".</p>
   <p><strong>Reset:</strong> "Reset to defaults" → <code>onChange({ ...DEFAULT_SETTINGS })</code>.</p>
 
-  <h2 id="s9-8">9.8 HelpScreen</h2>
+  <h2 id="s10-8">10.8 HelpScreen</h2>
   <p><strong>Route:</strong> <code>/help</code> — static content. Three sections: Spreadsheet setup (column A/B/C layout), Session modes table, Main screen reference table.</p>
 
-  <h2 id="s9-9">9.9 FeedbackScreen</h2>
+  <h2 id="s10-9">10.9 FeedbackScreen</h2>
   <p><strong>Route:</strong> <code>/feedback</code><br>
   <strong>Env:</strong> <code>VITE_FEEDBACK_URL</code></p>
   <p>If not set: "Feedback is not configured yet." Otherwise: textarea + "Send" button. POST with <code>mode: 'no-cors'</code>, form-encoded <code>{ email, message }</code>. Toast: "Thank you! Your feedback has been sent." / "Could not send feedback. Please try again."</p>
 
   <!-- ─── 10. Components ────────────────────────────────────────────────── -->
-  <h1 id="s10">10. Key Components</h1>
+  <h1 id="s11">11. Key Components</h1>
 
-  <h2 id="s10-1">10.1 FlipCard</h2>
+  <h2 id="s11-1">11.1 FlipCard</h2>
   <p><strong>Props:</strong> <code>step</code> (mode 1), <code>onNext: () =&gt; void</code>, <code>onLearn: () =&gt; void</code><br>
   <strong>State:</strong> <code>flipped</code>, <code>hasFlipped</code>, <code>markedLearned</code>, <code>touchStartY</code> (ref)</p>
   <ul>
@@ -686,30 +776,30 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
     <li><code>&lt;NextButton&gt;</code> disabled until <code>hasFlipped &#124;&#124; markedLearned</code></li>
   </ul>
 
-  <h2 id="s10-2">10.2 MultipleChoice</h2>
+  <h2 id="s11-2">11.2 MultipleChoice</h2>
   <p><strong>Props:</strong> <code>step</code> (mode 2), <code>onNext</code>, <code>onLearn</code><br>
   <strong>State:</strong> <code>selected</code> (row|null), <code>correct</code> (bool), <code>markedLearned</code></p>
   <p>Top half: "Learn and hide" + word card. Bottom half: 2×2 grid of 4 choice buttons showing <code>choice.translation</code>. Card states: <code>'correct'</code> | <code>'wrong'</code> | <code>'idle'</code>. Once correct → all choices disabled. Next enabled when <code>correct &#124;&#124; markedLearned</code>.</p>
 
-  <h2 id="s10-3">10.3 MatchingGrid</h2>
+  <h2 id="s11-3">11.3 MatchingGrid</h2>
   <p><strong>Props:</strong> <code>step</code> (mode 3), <code>onNext</code><br>
   <strong>State:</strong> <code>matched</code> (Set), <code>selected</code> ({side,row}|null), <code>wrongLeft</code>, <code>wrongRight</code></p>
   <p>Two columns (words | translations), 6 buttons each, independently shuffled. Wrong pair flashes red 500 ms. Card states: <code>'matched'</code> | <code>'wrong'</code> | <code>'selected'</code> | <code>'idle'</code>. Next enabled when <code>matched.size === 6</code>. No "Learn and hide" button.</p>
 
-  <h2 id="s10-4">10.4 NextButton</h2>
+  <h2 id="s11-4">11.4 NextButton</h2>
   <p><strong>Props:</strong> <code>onClick</code>, <code>disabled</code>, <code>label</code> (default <code>"Next →"</code>)<br>
   Full-width primary button (<code>btn btn-primary btn-full</code>) in a bottom wrapper div.</p>
 
-  <h2 id="s10-5">10.5 Toast</h2>
+  <h2 id="s11-5">11.5 Toast</h2>
   <p><strong>Props:</strong> <code>message</code>, <code>onDone</code><br>
   Auto-dismiss: visible 2 500 ms, CSS fade-out, then <code>onDone()</code> after additional 300 ms.</p>
 
-  <h2 id="s10-6">10.6 CheckIcon</h2>
+  <h2 id="s11-6">11.6 CheckIcon</h2>
   <p><strong>Props:</strong> <code>size</code> (default 20)<br>
   SVG 24×24 viewBox, <code>polyline points="20 6 9 17 4 12"</code>, stroke <code>currentColor</code>, strokeWidth 2.5, round caps/joins.</p>
 
   <!-- ─── 11. Theme ─────────────────────────────────────────────────────── -->
-  <h1 id="s11">11. Theme &amp; Colors</h1>
+  <h1 id="s12">12. Theme &amp; Colors</h1>
 
   <table>
     <thead><tr><th>Variable</th><th>Light hex</th><th>Dark hex</th><th>Usage</th></tr></thead>
@@ -746,7 +836,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   </table>
 
   <!-- ─── 12. Navigation ───────────────────────────────────────────────── -->
-  <h1 id="s12">12. Navigation &amp; Routes</h1>
+  <h1 id="s13">13. Navigation &amp; Routes</h1>
 
   <table>
     <thead><tr><th>Route</th><th>Component</th><th>Guard</th><th>Notes</th></tr></thead>
@@ -766,7 +856,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <p>No deeplink URI scheme. Standard <code>BrowserRouter</code>. Service worker handles navigation requests network-first with <code>/index.html</code> fallback, so direct URL access works after the shell is cached.</p>
 
   <!-- ─── 13. Loading & Empty States ───────────────────────────────────── -->
-  <h1 id="s13">13. Loading &amp; Empty States</h1>
+  <h1 id="s14">14. Loading &amp; Empty States</h1>
 
   <table>
     <thead><tr><th>Screen</th><th>Loading state</th><th>Empty state</th></tr></thead>
@@ -783,7 +873,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   <div class="note">No shimmer/skeleton animations — all loading states are plain text.</div>
 
   <!-- ─── 14. PWA ───────────────────────────────────────────────────────── -->
-  <h1 id="s14">14. Progressive Web App</h1>
+  <h1 id="s15">15. Progressive Web App</h1>
 
   <h2>Service Worker (<code>dist/sw.js</code>, cache name <code>words-v1</code>)</h2>
   <table>
@@ -814,7 +904,7 @@ https://www.googleapis.com/auth/drive.metadata.readonly</code></pre>
   </table>
 
   <!-- ─── 15. Setup ────────────────────────────────────────────────────── -->
-  <h1 id="s15">15. First-Time Setup (New Developer)</h1>
+  <h1 id="s16">16. First-Time Setup (New Developer)</h1>
 
   <ol>
     <li><strong>Google Cloud project</strong>
@@ -843,7 +933,7 @@ npm run dev   # http://localhost:3000</code></pre>
   </ol>
 
   <!-- ─── 16. Algorithms ───────────────────────────────────────────────── -->
-  <h1 id="s16">16. Key Algorithms</h1>
+  <h1 id="s17">17. Key Algorithms</h1>
 
   <h2>16.1 <code>isWordLearned(word, settings)</code></h2>
   <pre><code>function isWordLearned(word, settings):

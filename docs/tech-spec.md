@@ -280,7 +280,90 @@ After sign-in, `findOrCreateWordsFile()` runs the discovery flow described in §
 
 ---
 
-## 8. API Layer
+## 8. Onboarding Seed Data
+
+`seedNewSpreadsheet()` is called once immediately after a brand-new `db_words` spreadsheet is created. It writes all data via a single `values:batchUpdate` call with `valueInputOption: 'RAW'`.
+
+### Tab `ENG-DEU` — header row
+
+| Column A | Column B | Column C |
+|---|---|---|
+| `category` | `word` | `translation` |
+
+### Tab `ENG-DEU` — seed words (34 rows)
+
+**Category: Numbers** (12 words)
+
+| word (B) | translation (C) |
+|---|---|
+| eins | one |
+| zwei | two |
+| drei | three |
+| vier | four |
+| fünf | five |
+| sechs | six |
+| sieben | seven |
+| acht | eight |
+| neun | nine |
+| zehn | ten |
+| elf | eleven |
+| zwölf | twelve |
+
+**Category: Greetings** (11 words)
+
+| word (B) | translation (C) |
+|---|---|
+| Hallo | Hello |
+| Guten Morgen | Good morning |
+| Guten Tag | Good day |
+| Guten Abend | Good evening |
+| Auf Wiedersehen | Goodbye |
+| Tschüss | Bye |
+| Bitte | Please |
+| Danke | Thank you |
+| Entschuldigung | Excuse me |
+| Ja | Yes |
+| Nein | No |
+
+**Category: Colors** (11 words)
+
+| word (B) | translation (C) |
+|---|---|
+| rot | red |
+| blau | blue |
+| grün | green |
+| gelb | yellow |
+| schwarz | black |
+| weiß | white |
+| orange | orange |
+| rosa | pink |
+| lila | purple |
+| braun | brown |
+| grau | grey |
+
+All seeded words have columns D–G empty (m1=0, m2=0, m3=0, learned=FALSE by default).
+
+### Tab `_settings` — seed values
+
+| key (A) | value (B) |
+|---|---|
+| `language` | `ENG-DEU` |
+| `category` | `""` |
+| `mode1` | `TRUE` |
+| `mode2` | `TRUE` |
+| `mode3` | `TRUE` |
+| `stepsPerSession` | `12` |
+| `m1Max` | `4` |
+| `m2Max` | `8` |
+| `m3Max` | `12` |
+
+### First-run user experience
+
+After the seed is written the user lands on HomeScreen with language `ENG-DEU` pre-selected (read back from `_settings`). They can press **Start** immediately and begin practising German vocabulary — the three categories give enough words for all three learning modes to become available as counters accumulate.
+
+---
+
+## 9. API Layer
 
 All API calls go through `request(url, options)` in `sheetsApi.js`:
 1. Calls `refreshTokenIfNeeded()` (silent token refresh if needed)
@@ -307,9 +390,9 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 
 ---
 
-## 9. UI Screens
+## 10. UI Screens
 
-### 9.1 LoginScreen
+### 10.1 LoginScreen
 
 - **Route:** Not a route — rendered conditionally by `App.jsx` when `user === null`
 - **Props:** `onLogin: () => void`
@@ -317,7 +400,7 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 - **State:** `loading` (bool), `error` (string | null)
 - **Actions:** Button click → `signInWithPopup()` → `onLogin()` on success; "Sign in failed. Please try again." on error
 
-### 9.2 HomeScreen
+### 10.2 HomeScreen
 
 - **Route:** `/`
 - **Props:** `sheetId`, `currentLang`, `currentCategory`, `onSignOut`
@@ -336,7 +419,7 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 - Menu items: Settings (`/settings`), Help (`/help`), Feedback (`/feedback`)
 - Sign Out button → `signOut()` + `onSignOut()`
 
-### 9.3 SessionScreen
+### 10.3 SessionScreen
 
 - **Route:** `/session` — redirects to `/` if `!sheetId || !currentLang`
 - **Props:** `sheetId`, `tab`, `words`, `categoryFilter`, `settings`, `onSessionComplete`
@@ -364,7 +447,7 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 | `done === true` | `<CheckIcon size={64}>` + "Session complete!" + "Great job! Keep practising." + "Back to Home" |
 | `session === null` | "Loading session…" centered |
 
-### 9.4 WordListScreen
+### 10.4 WordListScreen
 
 - **Route:** `/words` — redirects to `/` if `!sheetId || !currentLang`
 - **Props:** `words`, `loading`, `categoryFilter`, `onToggleLearned`
@@ -383,7 +466,7 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 - `words.length > 0 && visibleWords.length === 0`: "No words in this category."
 - `loading === true`: "Loading…" centered
 
-### 9.5 LanguageScreen
+### 10.5 LanguageScreen
 
 - **Route:** `/language`
 - **Props:** `sheetId`, `currentLang`, `onSelect`, `onReconnect`
@@ -395,7 +478,7 @@ Fetches language tabs on mount via `getLanguageTabs(sheetId)`. Tab names are for
 
 **Tab item:** formatted name + raw code (e.g. `ENG-DEU`) + `<CheckIcon>` for the currently selected tab.
 
-### 9.6 CategoryScreen
+### 10.6 CategoryScreen
 
 - **Route:** `/category` — redirects to `/` if `!sheetId || !currentLang`
 - **Props:** `words`, `currentCategory`, `onSelect`
@@ -414,7 +497,7 @@ Categories are derived from `words[].category` (non-empty values), sorted alphab
 
 **Empty state:** "No categories found. Add a category in column G of your Google Sheet." *(Note: this message incorrectly references column G — the actual category column is A.)*
 
-### 9.7 SettingsScreen
+### 10.7 SettingsScreen
 
 - **Route:** `/settings`
 - **Props:** `settings`, `onChange`, `sheetId`, `sheetName`, `onChangeSheet`
@@ -438,14 +521,14 @@ Each row: checkbox (left) + label/description (middle) + "Max" number input (rig
 
 *Reset:* "Reset to defaults" → `onChange({ ...DEFAULT_SETTINGS })`.
 
-### 9.8 HelpScreen
+### 10.8 HelpScreen
 
 - **Route:** `/help`
 - **Props:** none (static content)
 
 Three sections: "Spreadsheet" (setup instructions, column layout A/B/C), "Session modes" (table of 3 modes with availability conditions), "Main screen" (table of 5 navigation targets).
 
-### 9.9 FeedbackScreen
+### 10.9 FeedbackScreen
 
 - **Route:** `/feedback`
 - **Props:** none
@@ -456,9 +539,9 @@ If `VITE_FEEDBACK_URL` is not set: shows "Feedback is not configured yet." Other
 
 ---
 
-## 10. Key Components
+## 11. Key Components
 
-### 10.1 FlipCard
+### 11.1 FlipCard
 
 **Props:** `step` (mode 1 step object), `onNext: () => void`, `onLearn: () => void`
 
@@ -474,7 +557,7 @@ If `VITE_FEEDBACK_URL` is not set: shows "Feedback is not configured yet." Other
 
 **Touch handling:** `touchstart` saves Y coordinate; `touchend` computes `|deltaY|`; if > 50 px → flip.
 
-### 10.2 MultipleChoice
+### 11.2 MultipleChoice
 
 **Props:** `step` (mode 2 step object), `onNext: () => void`, `onLearn: () => void`
 
@@ -488,7 +571,7 @@ If `VITE_FEEDBACK_URL` is not set: shows "Feedback is not configured yet." Other
 
 **Next:** enabled when `correct || markedLearned`.
 
-### 10.3 MatchingGrid
+### 11.3 MatchingGrid
 
 **Props:** `step` (mode 3 step object), `onNext: () => void`
 
@@ -509,19 +592,19 @@ If `VITE_FEEDBACK_URL` is not set: shows "Feedback is not configured yet." Other
 
 *No "Learn and hide" button in mode 3.*
 
-### 10.4 NextButton
+### 11.4 NextButton
 
 **Props:** `onClick: () => void`, `disabled: boolean`, `label: string` (default `"Next →"`)
 
 Full-width primary button (`btn btn-primary btn-full`) in a bottom wrapper div.
 
-### 10.5 Toast
+### 11.5 Toast
 
 **Props:** `message: string`, `onDone: () => void`
 
 Auto-dismiss: visible for 2 500 ms, CSS fade-out, then `onDone()` called after additional 300 ms.
 
-### 10.6 CheckIcon
+### 11.6 CheckIcon
 
 **Props:** `size: number` (default 20)
 
@@ -529,7 +612,7 @@ SVG `24×24` viewBox, `polyline points="20 6 9 17 4 12"`, stroke `currentColor`,
 
 ---
 
-## 11. Theme & Colors
+## 12. Theme & Colors
 
 | Variable | Light hex | Dark hex | Usage |
 |---|---|---|---|
@@ -561,7 +644,7 @@ Dark theme is applied automatically via `@media (prefers-color-scheme: dark)`.
 
 ---
 
-## 12. Navigation & Routes
+## 13. Navigation & Routes
 
 | Route | Component | Guard | Notes |
 |---|---|---|---|
@@ -579,7 +662,7 @@ No deeplink URI scheme. Standard browser history routing (`BrowserRouter`). The 
 
 ---
 
-## 13. Loading & Empty States
+## 14. Loading & Empty States
 
 | Screen | Loading state | Empty state |
 |---|---|---|
@@ -594,7 +677,7 @@ No shimmer/skeleton animations — all loading states are plain text.
 
 ---
 
-## 14. Progressive Web App
+## 15. Progressive Web App
 
 **Service Worker** (`dist/sw.js`, cache name `words-v1`):
 
@@ -625,7 +708,7 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
 
 ---
 
-## 15. First-Time Setup (New Developer)
+## 16. First-Time Setup (New Developer)
 
 1. **Google Cloud project**
    - Go to [console.cloud.google.com](https://console.cloud.google.com)
@@ -661,7 +744,7 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
 
 ---
 
-## 16. Key Algorithms
+## 17. Key Algorithms
 
 ### 16.1 `isWordLearned(word, settings)`
 
