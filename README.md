@@ -1,6 +1,7 @@
 # Words
 
-[![Live App](https://img.shields.io/badge/Live_App-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://stler-words.vercel.app/)
+[![Live PWA](https://img.shields.io/badge/Stler_Words-Live_PWA-E07E38?style=for-the-badge)](https://stler-words.vercel.app/)
+
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite_6-646CFF?style=for-the-badge&logo=vite&logoColor=white)
