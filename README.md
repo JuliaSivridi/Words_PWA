@@ -1,5 +1,14 @@
 # Words
 
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite_6-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router_v6-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
+![Google Sheets](https://img.shields.io/badge/Google_Sheets_API-34A853?style=for-the-badge&logo=googlesheets&logoColor=white)
+![Google OAuth](https://img.shields.io/badge/Google_OAuth_2.0-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+
 A personal vocabulary learning app built as a **Progressive Web App**. Runs in any browser and installs on Android/iOS home screens as a standalone app. No backend — Google Sheets is the database.
 
 ---
@@ -19,22 +28,22 @@ A personal vocabulary learning app built as a **Progressive Web App**. Runs in a
 
 | Mode | Trigger | Mechanic | Reps to graduate |
 |------|---------|----------|-----------------|
-| 1 — FlipCard | New words (m1 < 4) | Tap to flip; see translation | 4 |
-| 2 — MultipleChoice | After 4 flip-card views | Pick correct translation from 4 options | 8 |
-| 3 — MatchingGrid | After 8 multiple-choice answers | Match 6 word–translation pairs | 12 |
+| 🃏 1 — FlipCard | New words (m1 < 4) | Tap to flip; see translation | 4 |
+| 🔤 2 — MultipleChoice | After 4 flip-card views | Pick correct translation from 4 options | 8 |
+| 🔗 3 — MatchingGrid | After 8 multiple-choice answers | Match 6 word–translation pairs | 12 |
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 (JavaScript) |
-| Build | Vite 6 |
-| Styling | CSS Modules + CSS variables (light / dark theme) |
-| Routing | React Router DOM v6 |
-| Database | Google Sheets API v4 |
-| Auth | Google Identity Services (OAuth 2.0) |
-| PWA | manifest.json + service worker |
-| Hosting | Any static host (Vercel, Netlify, GitHub Pages) |
+| 🖼️ Framework | React 18 (JavaScript) |
+| ⚡ Build | Vite 6 |
+| 🎨 Styling | CSS Modules + CSS variables (light / dark theme) |
+| 🔀 Routing | React Router DOM v6 |
+| 🗄️ Database | Google Sheets API v4 |
+| 🔐 Auth | Google Identity Services (OAuth 2.0) |
+| 📱 PWA | manifest.json + service worker |
+| 🚀 Hosting | Any static host (Vercel, Netlify, GitHub Pages) |
 
 ## Setup
 
@@ -99,8 +108,8 @@ All data lives in the user's **db_words** Google Spreadsheet (found or created a
 
 | Sheet | Purpose |
 |---|---|
-| `RU-EN` (or any tab) | Word pairs with repetition counters |
-| `_settings` | Last selected language (A1) and category filter (A2) |
+| 📗 `RU-EN` (or any tab) | Word pairs with repetition counters |
+| ⚙️ `_settings` | Last selected language (A1) and category filter (A2) |
 
 **Word tab columns:**
 
