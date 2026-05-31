@@ -935,7 +935,7 @@ npm run dev   # http://localhost:3000</code></pre>
   <!-- ─── 16. Algorithms ───────────────────────────────────────────────── -->
   <h1 id="s17">17. Key Algorithms</h1>
 
-  <h2>16.1 <code>isWordLearned(word, settings)</code></h2>
+  <h2>17.1 <code>isWordLearned(word, settings)</code></h2>
   <pre><code>function isWordLearned(word, settings):
   if word.learned == true:
     return true
@@ -947,7 +947,7 @@ npm run dev   # http://localhost:3000</code></pre>
     return false
   return true</code></pre>
 
-  <h2>16.2 <code>isWordEligibleForMode(word, modeNum, settings)</code></h2>
+  <h2>17.2 <code>isWordEligibleForMode(word, modeNum, settings)</code></h2>
   <pre><code>function isWordEligibleForMode(word, modeNum, settings):
   if modeNum == 1:
     return settings.mode1 AND word.m1 &lt; m1Max
@@ -964,7 +964,7 @@ npm run dev   # http://localhost:3000</code></pre>
       AND (NOT settings.mode1 OR word.m1 &gt;= m1Max)</code></pre>
   <div class="note">A disabled mode does not gate the next mode — its counter requirement is skipped entirely.</div>
 
-  <h2>16.3 <code>buildMode3Pool(active, categoryFilter, settings)</code></h2>
+  <h2>17.3 <code>buildMode3Pool(active, categoryFilter, settings)</code></h2>
   <pre><code>function buildMode3Pool(active, categoryFilter, settings):
   qualified = active
     .filter(w =&gt; isWordEligibleForMode(w, 3, settings))
@@ -987,7 +987,7 @@ npm run dev   # http://localhost:3000</code></pre>
   return qualified + supplements</code></pre>
   <div class="note">Ensures all selected categories appear in the matching grid even before they reach the mode 3 threshold.</div>
 
-  <h2>16.4 <code>buildSession(words, categoryFilter, settings)</code></h2>
+  <h2>17.4 <code>buildSession(words, categoryFilter, settings)</code></h2>
   <pre><code>function buildSession(words, categoryFilter, settings):
   TOTAL   = settings.stepsPerSession        // default 12
 

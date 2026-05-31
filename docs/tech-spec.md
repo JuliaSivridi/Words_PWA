@@ -5,6 +5,47 @@
 
 ---
 
+## Table of Contents
+
+1. [Overview](#1-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Architecture](#3-architecture)
+4. [Package / Folder Structure](#4-package--folder-structure)
+5. [Data Model](#5-data-model)
+6. [External Storage Schema (Google Sheets)](#6-external-storage-schema-google-sheets)
+7. [Authentication & First-Launch Setup](#7-authentication--first-launch-setup)
+8. [Onboarding Seed Data](#8-onboarding-seed-data)
+9. [API Layer](#9-api-layer)
+10. [UI Screens](#10-ui-screens)
+    - [10.1 LoginScreen](#101-loginscreen)
+    - [10.2 HomeScreen](#102-homescreen)
+    - [10.3 SessionScreen](#103-sessionscreen)
+    - [10.4 WordListScreen](#104-wordlistscreen)
+    - [10.5 LanguageScreen](#105-languagescreen)
+    - [10.6 CategoryScreen](#106-categoryscreen)
+    - [10.7 SettingsScreen](#107-settingsscreen)
+    - [10.8 HelpScreen](#108-helpscreen)
+    - [10.9 FeedbackScreen](#109-feedbackscreen)
+11. [Key Components](#11-key-components)
+    - [11.1 FlipCard](#111-flipcard)
+    - [11.2 MultipleChoice](#112-multiplechoice)
+    - [11.3 MatchingGrid](#113-matchinggrid)
+    - [11.4 NextButton](#114-nextbutton)
+    - [11.5 Toast](#115-toast)
+    - [11.6 CheckIcon](#116-checkicon)
+12. [Theme & Colors](#12-theme--colors)
+13. [Navigation & Routes](#13-navigation--routes)
+14. [Loading & Empty States](#14-loading--empty-states)
+15. [Progressive Web App](#15-progressive-web-app)
+16. [First-Time Setup (New Developer)](#16-first-time-setup-new-developer)
+17. [Key Algorithms](#17-key-algorithms)
+    - [17.1 isWordLearned](#171-iswordlearnedword-settings)
+    - [17.2 isWordEligibleForMode](#172-iswordeligibleformodeword-modenum-settings)
+    - [17.3 buildMode3Pool](#173-buildmode3poolactive-categoryfilter-settings)
+    - [17.4 buildSession](#174-buildsessionwords-categoryfilter-settings)
+
+---
+
 ## 1. Overview
 
 **Words** is a client-side Progressive Web App for vocabulary learning using spaced repetition. The user stores word pairs in a Google Sheets spreadsheet; the app reads and writes that sheet directly from the browser using the Google Sheets API v4. There is no backend.
@@ -746,7 +787,7 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
 
 ## 17. Key Algorithms
 
-### 16.1 `isWordLearned(word, settings)`
+### 17.1 `isWordLearned(word, settings)`
 
 ```
 function isWordLearned(word, settings):
@@ -761,7 +802,7 @@ function isWordLearned(word, settings):
   return true
 ```
 
-### 16.2 `isWordEligibleForMode(word, modeNum, settings)`
+### 17.2 `isWordEligibleForMode(word, modeNum, settings)`
 
 ```
 function isWordEligibleForMode(word, modeNum, settings):
@@ -782,7 +823,7 @@ function isWordEligibleForMode(word, modeNum, settings):
 
 A disabled mode does not gate the next mode — its counter requirement is skipped entirely.
 
-### 16.3 `buildMode3Pool(active, categoryFilter, settings)`
+### 17.3 `buildMode3Pool(active, categoryFilter, settings)`
 
 ```
 function buildMode3Pool(active, categoryFilter, settings):
@@ -809,7 +850,7 @@ function buildMode3Pool(active, categoryFilter, settings):
 
 This ensures all selected categories appear in the matching grid even before they reach the mode 3 threshold.
 
-### 16.4 `buildSession(words, categoryFilter, settings)`
+### 17.4 `buildSession(words, categoryFilter, settings)`
 
 ```
 function buildSession(words, categoryFilter, settings):
