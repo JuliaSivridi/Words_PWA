@@ -4,7 +4,7 @@
   "description": "Learn vocabulary with flashcards",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#E07E38",
   "theme_color": "#E07E38",
   "orientation": "portrait",
   "icons": [
