@@ -1,5 +1,5 @@
 // Google Identity Services – client-side OAuth 2.0
-// Access token lives in memory; user profile persisted in localStorage.
+// Token is persisted in localStorage so page refresh doesn't require GIS popup.
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
@@ -10,9 +10,38 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.metadata.readonly',
 ].join(' ')
 
+const TOKEN_KEY        = 'words_token'
+const TOKEN_EXPIRY_KEY = 'words_token_expiry'
+
 let accessToken = null
 let tokenClient = null
 let tokenExpiresAt = 0
+
+function persistToken(token, expiresIn) {
+  const expiry = Date.now() + expiresIn * 1000
+  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiry))
+  accessToken = token
+  tokenExpiresAt = expiry
+}
+
+function loadPersistedToken() {
+  const token = localStorage.getItem(TOKEN_KEY)
+  const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) ?? '0')
+  if (token && Date.now() < expiry - 30_000) {
+    accessToken = token
+    tokenExpiresAt = expiry
+    return true
+  }
+  return false
+}
+
+function clearPersistedToken() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(TOKEN_EXPIRY_KEY)
+  accessToken = null
+  tokenExpiresAt = 0
+}
 
 // Listeners that want to know when auth state changes
 const listeners = new Set()
@@ -48,10 +77,9 @@ function saveUser(profile) {
 }
 
 export function signOut() {
-  accessToken = null
-  tokenExpiresAt = 0
+  if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {})
+  clearPersistedToken()
   localStorage.removeItem('words_user')
-  google.accounts.oauth2.revoke(getUser()?.email ?? '', () => {})
   notify()
 }
 
@@ -76,8 +104,7 @@ function initTokenClient(onSuccess, onError) {
         onError?.(response.error)
         return
       }
-      accessToken = response.access_token
-      tokenExpiresAt = Date.now() + (response.expires_in ?? 3600) * 1000
+      persistToken(response.access_token, response.expires_in ?? 3600)
 
       // If we don't have a saved profile yet, fetch it
       if (!getUser()) {
@@ -103,6 +130,11 @@ function initTokenClient(onSuccess, onError) {
 // Attempt silent sign-in (no UI). Returns a Promise that resolves to true/false.
 export function trySilentSignIn() {
   return new Promise((resolve) => {
+    // Fast path: stored token still valid — no GIS round-trip needed
+    if (loadPersistedToken()) {
+      resolve(true)
+      return
+    }
     if (!window.google?.accounts?.oauth2) {
       resolve(false)
       return

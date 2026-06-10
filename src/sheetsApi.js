@@ -7,6 +7,7 @@ const DRIVE_BASE = 'https://www.googleapis.com/drive/v3'
 async function request(url, options = {}) {
   await refreshTokenIfNeeded()
   const token = getAccessToken()
+  if (!token) throw new Error('Сессия истекла — войдите заново')
   const res = await fetch(url, {
     ...options,
     headers: {
