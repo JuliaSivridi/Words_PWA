@@ -27,35 +27,25 @@ async function request(url, options = {}) {
 
 const DB_FILE_NAME = 'db_words'
 
-export async function findOrCreateWordsFile() {
+// Under drive.file there is NO silent find-by-name and NO silent create:
+// on first run the user explicitly creates a new file or picks one in the
+// Google Picker (App.jsx shows the setup screen when this returns null).
+export async function checkWordsFile() {
   const cached = localStorage.getItem('words_sheet_id')
-  if (cached) return cached
+  if (!cached) return null
 
-  // Search for existing file
-  async function searchDrive() {
-    const query = encodeURIComponent(
-      `name='${DB_FILE_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
-    )
-    const list = await request(`${DRIVE_BASE}/files?q=${query}&fields=files(id,name)`)
-    return list.files ?? []
+  // Verify the app still has access (stale id or scope migration → setup)
+  try {
+    const f = await request(`${DRIVE_BASE}/files/${cached}?fields=id,name`)
+    localStorage.setItem('words_sheet_name', f.name)
+    return cached
+  } catch {
+    return null
   }
+}
 
-  let files = await searchDrive()
-
-  // Drive search can lag for recently-created files — retry once after a short delay
-  // before concluding no file exists and creating a new one.
-  if (files.length === 0) {
-    await new Promise(r => setTimeout(r, 2500))
-    files = await searchDrive()
-  }
-
-  if (files.length > 0) {
-    const id = files[0].id
-    localStorage.setItem('words_sheet_id', id)
-    return id
-  }
-
-  // No existing file found — create a new spreadsheet with sample content
+/** Creates a fresh db_words spreadsheet with sample content. */
+export async function createWordsFile() {
   const created = await request(SHEETS_BASE, {
     method: 'POST',
     body: JSON.stringify({
@@ -68,6 +58,7 @@ export async function findOrCreateWordsFile() {
   })
   await seedNewSpreadsheet(created.spreadsheetId)
   localStorage.setItem('words_sheet_id', created.spreadsheetId)
+  localStorage.setItem('words_sheet_name', DB_FILE_NAME)
   return created.spreadsheetId
 }
 
@@ -144,18 +135,6 @@ async function seedNewSpreadsheet(id) {
       ],
     }),
   })
-}
-
-// ─── Drive: list all Google Sheets owned by the user ────────────────────────
-
-export async function listUserSheets() {
-  const query = encodeURIComponent(
-    `mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
-  )
-  const data = await request(
-    `${DRIVE_BASE}/files?q=${query}&fields=files(id,name)&orderBy=modifiedTime+desc`
-  )
-  return data.files ?? []
 }
 
 // ─── Drive: get display name of a specific file ──────────────────────────────

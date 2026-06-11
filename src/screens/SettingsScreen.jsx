@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Toast from '../components/Toast.jsx'
 import { DEFAULT_SETTINGS } from '../settingsUtils.js'
-import { listUserSheets } from '../sheetsApi.js'
+import { openSpreadsheetPicker } from '../picker.js'
 import styles from './SettingsScreen.module.css'
 
 const MODES = [
@@ -15,30 +15,16 @@ export default function SettingsScreen({ settings, onChange, sheetId, sheetName,
   const navigate = useNavigate()
   const [toast, setToast] = useState(null)
 
-  // ── Sheet picker ───────────────────────────────────────────────────────────
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const [pickerFiles, setPickerFiles] = useState([])
-  const [pickerLoading, setPickerLoading] = useState(false)
-
+  // ── Sheet picker — native Google Picker: picking a file also grants the
+  // app access to it (we only have the drive.file scope) ─────────────────────
   async function handleOpenPicker() {
-    if (pickerOpen) { setPickerOpen(false); return }
-    setPickerOpen(true)
-    setPickerLoading(true)
     try {
-      const files = await listUserSheets()
-      setPickerFiles(files)
+      const file = await openSpreadsheetPicker()
+      if (file && file.id !== sheetId) {
+        onChangeSheet(file.id, file.name)
+      }
     } catch {
-      setToast('Could not load files')
-      setPickerOpen(false)
-    } finally {
-      setPickerLoading(false)
-    }
-  }
-
-  function handlePickFile(file) {
-    setPickerOpen(false)
-    if (file.id !== sheetId) {
-      onChangeSheet(file.id, file.name)
+      setToast('Could not open the file picker')
     }
   }
 
@@ -92,32 +78,10 @@ export default function SettingsScreen({ settings, onChange, sheetId, sheetName,
             <button
               className={styles.changeBtn}
               onClick={handleOpenPicker}
-              aria-expanded={pickerOpen}
             >
-              {pickerOpen ? 'Cancel' : 'Change'}
+              Change
             </button>
           </div>
-
-          {pickerOpen && (
-            <div className={styles.pickerList}>
-              {pickerLoading && (
-                <div className={styles.pickerEmpty}>Loading your sheets…</div>
-              )}
-              {!pickerLoading && pickerFiles.length === 0 && (
-                <div className={styles.pickerEmpty}>No Google Sheets found in your Drive.</div>
-              )}
-              {!pickerLoading && pickerFiles.map(file => (
-                <button
-                  key={file.id}
-                  className={`${styles.pickerItem} ${file.id === sheetId ? styles.pickerItemActive : ''}`}
-                  onClick={() => handlePickFile(file)}
-                >
-                  <span className={styles.pickerItemName}>{file.name}</span>
-                  {file.id === sheetId && <CheckMark />}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ── Session ─────────────────────────────────────────────────────── */}

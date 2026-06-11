@@ -6,7 +6,8 @@ import {
   trySilentSignIn,
   onAuthChange,
 } from './auth.js'
-import { findOrCreateWordsFile, getSheetFileName, readSettings, writeSettings } from './sheetsApi.js'
+import { checkWordsFile, createWordsFile, getSheetFileName, readSettings, writeSettings } from './sheetsApi.js'
+import { openSpreadsheetPicker } from './picker.js'
 import { useWords } from './hooks/useWords.js'
 import { DEFAULT_SETTINGS } from './settingsUtils.js'
 
@@ -60,6 +61,9 @@ export default function App() {
     () => localStorage.getItem('words_sheet_name') ?? null
   )
   const [sheetSearchKey, setSheetSearchKey] = useState(0)
+  const [needsSetup, setNeedsSetup] = useState(false)
+  const [setupError, setSetupError] = useState('')
+  const [setupBusy, setSetupBusy] = useState(false)
   const [currentLang, setCurrentLang] = useState(
     () => localStorage.getItem('words_lang') ?? null
   )
@@ -84,8 +88,10 @@ export default function App() {
   // (used by handleReconnectSheet when the cached sheet ID is wrong)
   useEffect(() => {
     if (!user) { setSheetId(null); return }
-    findOrCreateWordsFile()
+    checkWordsFile()
       .then(async id => {
+        if (!id) { setNeedsSetup(true); setSheetId(null); return }
+        setNeedsSetup(false)
         setSheetId(id)
         // Fetch and cache the file display name (non-blocking)
         getSheetFileName(id)
@@ -223,6 +229,66 @@ export default function App() {
 
   if (!user) {
     return <LoginScreen onLogin={() => setUser(getUser())} />
+  }
+
+  // First-run / migration: never create a file silently — the user explicitly
+  // creates a new spreadsheet or picks an existing one in the Google Picker.
+  if (needsSetup) {
+    const handlePick = async () => {
+      setSetupError('')
+      try {
+        const file = await openSpreadsheetPicker()
+        if (file) {
+          setNeedsSetup(false)
+          handleSheetChange(file.id, file.name)
+        }
+      } catch (e) { setSetupError(String(e)) }
+    }
+    const handleCreate = async () => {
+      setSetupBusy(true); setSetupError('')
+      try {
+        await createWordsFile()
+        setNeedsSetup(false)
+        setSheetSearchKey(k => k + 1)
+      } catch (e) { setSetupError(String(e)) }
+      finally { setSetupBusy(false) }
+    }
+    return (
+      <div style={{
+        minHeight: '100dvh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 12,
+        background: 'var(--bg)', color: 'var(--text)', padding: 24, textAlign: 'center',
+      }}>
+        <h2 style={{ margin: 0 }}>Choose your data file</h2>
+        <p style={{ color: 'var(--text-muted)', maxWidth: 320, lineHeight: 1.45 }}>
+          Words stores your vocabulary in a Google Sheets file in your Drive.
+          Create a new one, or pick an existing spreadsheet (e.g. your db_words).
+        </p>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginTop: 6 }}>
+          <button
+            onClick={handlePick}
+            disabled={setupBusy}
+            style={{
+              padding: '10px 18px', borderRadius: 10, border: '1px solid var(--accent)',
+              background: 'var(--accent)', color: '#fff', fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            Choose from Google Drive
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={setupBusy}
+            style={{
+              padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text)', fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            {setupBusy ? 'Creating…' : 'Create new spreadsheet'}
+          </button>
+        </div>
+        {setupError && <p style={{ color: '#e05555', maxWidth: 340 }}>{setupError}</p>}
+      </div>
+    )
   }
 
   return (
