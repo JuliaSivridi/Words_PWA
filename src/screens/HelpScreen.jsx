@@ -105,7 +105,13 @@ export default function HelpScreen() {
                 </tr>
                 <tr>
                   <td className={styles.tdLabel}><strong>Word list</strong></td>
-                  <td>Browse all words; tap the eye icon to mark a word as learned</td>
+                  <td>
+                    Browse all words; tap the eye icon to mark a word as learned
+                    (it will no longer appear in sessions; tap again to undo).
+                    The number like 7&thinsp;/&thinsp;24 is repetitions done out of the
+                    total required by your mode settings; the three colored bars
+                    show progress in each exercise mode separately.
+                  </td>
                 </tr>
                 <tr>
                   <td className={styles.tdLabel}><strong>Avatar</strong></td>

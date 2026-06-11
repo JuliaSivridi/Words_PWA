@@ -276,6 +276,7 @@ export default function App() {
               loading={loading}
               categoryFilter={sessionCategory}
               onToggleLearned={handleToggleLearned}
+              settings={modeSettings}
             />
           ) : (
             <Navigate to="/" replace />

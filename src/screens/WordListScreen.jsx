@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { TOTAL_REPS } from '../constants.js'
 import CheckIcon from '../components/CheckIcon.jsx'
+import { DEFAULT_SETTINGS } from '../settingsUtils.js'
 import styles from './WordListScreen.module.css'
 
 // categoryFilter: null = show all; string = show only words in that category
-export default function WordListScreen({ words, loading, categoryFilter, onToggleLearned }) {
+export default function WordListScreen({ words, loading, categoryFilter, onToggleLearned, settings = DEFAULT_SETTINGS }) {
   const navigate = useNavigate()
 
   // categoryFilter: null = show all; string[] = show only matching categories
@@ -28,7 +28,8 @@ export default function WordListScreen({ words, loading, categoryFilter, onToggl
           )}
         </div>
         <span className={styles.count}>
-          {visibleWords.filter(w => w.learned).length}&thinsp;/&thinsp;{visibleWords.length}
+          <span>Learned {visibleWords.filter(w => w.learned).length}</span>
+          <span>Total {visibleWords.length}</span>
         </span>
       </div>
 
@@ -56,6 +57,7 @@ export default function WordListScreen({ words, loading, categoryFilter, onToggl
           <WordItem
             key={word.row}
             word={word}
+            settings={settings}
             onToggle={() => onToggleLearned(word)}
           />
         ))}
@@ -64,19 +66,40 @@ export default function WordListScreen({ words, loading, categoryFilter, onToggl
   )
 }
 
-function WordItem({ word, onToggle }) {
+function WordItem({ word, settings, onToggle }) {
   const isLearned = word.learned
-  const progress = word.m1 + word.m2 + word.m3
+
+  // Per-mode progress bars (only enabled modes), thresholds come from settings
+  const modes = [
+    settings.mode1 && { value: word.m1, max: settings.m1Max, cls: styles.barM1 },
+    settings.mode2 && { value: word.m2, max: settings.m2Max, cls: styles.barM2 },
+    settings.mode3 && { value: word.m3, max: settings.m3Max, cls: styles.barM3 },
+  ].filter(Boolean)
+
+  const progress = modes.reduce((s, m) => s + Math.min(m.value, m.max), 0)
+  const total    = modes.reduce((s, m) => s + m.max, 0)
 
   return (
     <div className={`${styles.item} ${isLearned ? styles.learned : ''}`}>
       <div className={styles.texts}>
         <span className={styles.wordText}>{word.word}</span>
         <span className={styles.translationText}>{word.translation}</span>
+        {!isLearned && (
+          <div className={styles.bars} title="Progress per exercise mode">
+            {modes.map((m, i) => (
+              <span key={i} className={styles.barTrack}>
+                <span
+                  className={`${styles.barFill} ${m.cls}`}
+                  style={{ width: `${Math.min(100, (m.value / m.max) * 100)}%` }}
+                />
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <span className={`${styles.progress} ${isLearned ? styles.progressCheck : ''}`} title="Repetitions done / total">
-        {isLearned ? <CheckIcon size={18} /> : `${progress}\u200A/\u200A${TOTAL_REPS}`}
+        {isLearned ? <CheckIcon size={18} /> : `${progress}\u200A/\u200A${total}`}
       </span>
 
       <button

@@ -42,9 +42,14 @@
   line-height: 1.2;
 }
 
-/* Word count on the right */
+/* Learned / Total legend on the right */
 .count {
-  font-size: 0.9375rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
   color: var(--text-muted);
   min-width: 56px;
   text-align: right;
@@ -101,6 +106,33 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Per-mode progress bars: red → orange → green, "danger to good" */
+.bars {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  max-width: 180px;
+}
+
+.barTrack {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.2s;
+}
+
+.barM1 { background: #e05555; }
+.barM2 { background: #e8935a; }
+.barM3 { background: #4caf50; }
 
 /* Progress counter: e.g. "15 / 40" or "✓" for learned */
 .progress {
