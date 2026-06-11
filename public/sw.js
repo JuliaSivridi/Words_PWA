@@ -1,8 +1,12 @@
-const CACHE_NAME = 'words-v1'
+const CACHE_NAME = 'words-v2'
+
+// Base path comes from the SW registration scope, so the same file works
+// at the domain root (Vercel) and under /Words_PWA/ (GitHub Pages).
+const BASE = new URL(self.registration.scope).pathname
 
 const APP_SHELL = [
-  '/',
-  '/index.html',
+  BASE,
+  BASE + 'index.html',
 ]
 
 self.addEventListener('install', event => {
@@ -36,7 +40,7 @@ self.addEventListener('fetch', event => {
   // Network-first for navigation requests
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/index.html'))
+      fetch(event.request).catch(() => caches.match(BASE + 'index.html'))
     )
     return
   }

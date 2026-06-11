@@ -1,6 +1,6 @@
 # Words
 
-[![Live PWA](https://img.shields.io/badge/Stler_Words-Live_PWA-E07E38?style=for-the-badge)](https://stler-words.vercel.app/)
+[![Live PWA](https://img.shields.io/badge/Stler_Words-Live_PWA-E07E38?style=for-the-badge)](https://juliasivridi.github.io/Words_PWA/)
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
@@ -9,7 +9,7 @@
 ![Google Sheets](https://img.shields.io/badge/Google_Sheets_API-34A853?style=for-the-badge&logo=googlesheets&logoColor=white)
 ![Google OAuth](https://img.shields.io/badge/Google_OAuth_2.0-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)](https://juliasivridi.github.io/Words_PWA/)
 
 A personal vocabulary learning app built as a **Progressive Web App**. Runs in any browser and installs on Android/iOS home screens as a standalone app. No backend — Google Sheets is the database.
 
@@ -96,13 +96,13 @@ npm run dev    # http://localhost:5173
 npm run build  # production build → dist/
 ```
 
-### Deploy to Vercel
+### Deploy to GitHub Pages
 
-1. Import the repository at [vercel.com](https://vercel.com)
-2. Add environment variable in project Settings → Environment Variables:
-   - `VITE_GOOGLE_CLIENT_ID`
-3. Every push to `main` triggers automatic deployment
-4. Add the Vercel URL to Google Cloud Console Authorized JavaScript Origins
+1. Settings → Pages → Source: **GitHub Actions**
+2. Add repository secrets (Settings → Secrets and variables → Actions):
+   `VITE_GOOGLE_CLIENT_ID`, `VITE_FEEDBACK_URL`, `VITE_GOOGLE_API_KEY`
+3. Every push to `main` triggers `.github/workflows/deploy.yml`
+4. Add the Pages URL to Google Cloud Console Authorized JavaScript Origins
 
 ## Data Model
 
