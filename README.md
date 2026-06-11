@@ -64,7 +64,7 @@ A personal vocabulary learning app built as a **Progressive Web App**. Runs in a
 4. Add to **Authorized JavaScript origins** (not Redirect URIs):
    ```
    http://localhost:5173
-   https://your-app.vercel.app
+   https://juliasivridi.github.io
    ```
 5. Add your Google account as a **test user** in the OAuth consent screen
 
@@ -133,4 +133,4 @@ All data lives in the user's **db_words** Google Spreadsheet (found or created a
 
 ## Technical Documentation
 
-See [`docs/technical-doc.html`](docs/technical-doc.html) for the full technical reference covering architecture, data model, game mechanics, auth flow, API integration, and deployment.
+See [`docs/tech-spec.md`](docs/tech-spec.md) for the full technical reference covering architecture, data model, game mechanics, auth flow, API integration, and deployment.
