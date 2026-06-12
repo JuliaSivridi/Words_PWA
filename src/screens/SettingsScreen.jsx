@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Toast from '../components/Toast.jsx'
 import { DEFAULT_SETTINGS } from '../settingsUtils.js'
 import { openSpreadsheetPicker } from '../picker.js'
+import UserMenu from '../components/UserMenu.jsx'
 import styles from './SettingsScreen.module.css'
 
 const MODES = [
@@ -58,10 +59,11 @@ export default function SettingsScreen({ settings, onChange, sheetId, sheetName,
     <div className={styles.screen}>
       {/* Top bar */}
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">
+        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
           <BackIcon />
         </button>
         <span className={styles.title}>Settings</span>
+        <UserMenu />
       </div>
 
       <div className={styles.content}>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser } from '../auth.js'
 import Toast from '../components/Toast.jsx'
+import UserMenu from '../components/UserMenu.jsx'
 import styles from './FeedbackScreen.module.css'
 
 const FEEDBACK_URL = import.meta.env.VITE_FEEDBACK_URL
@@ -39,10 +40,11 @@ export default function FeedbackScreen() {
   return (
     <div className={styles.screen}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">
+        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
           <BackIcon />
         </button>
         <span className={styles.title}>Feedback</span>
+        <UserMenu />
       </div>
 
       <div className={styles.content}>

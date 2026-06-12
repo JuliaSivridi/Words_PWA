@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import UserMenu from '../components/UserMenu.jsx'
 import styles from './HelpScreen.module.css'
 
 export default function HelpScreen() {
@@ -7,10 +8,11 @@ export default function HelpScreen() {
   return (
     <div className={styles.screen}>
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">
+        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
           <BackIcon />
         </button>
         <span className={styles.title}>Short guide</span>
+        <UserMenu />
       </div>
 
       <div className={styles.content}>
