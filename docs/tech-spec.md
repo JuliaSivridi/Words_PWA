@@ -70,7 +70,7 @@
 | Auth | Google Identity Services (GIS) | CDN | `accounts.google.com/gsi/client` |
 | Data storage | Google Sheets API v4 | REST | Direct browser `fetch` calls |
 | File discovery | Google Drive API v3 | REST | Used to find/list spreadsheet files |
-| PWA | Service Worker (custom) | — | `dist/sw.js`, cache name `words-v1` |
+| PWA | Service Worker (custom) | — | `dist/sw.js`, cache name `words-v2` |
 | Styling | CSS Modules + global `theme.css` | — | CSS custom properties, light/dark |
 
 **Environment variables:**
@@ -78,6 +78,7 @@
 | Variable | Required | Purpose |
 |---|---|---|
 | `VITE_GOOGLE_CLIENT_ID` | Yes | Google OAuth 2.0 client ID |
+| `VITE_GOOGLE_API_KEY` | Yes | Google API key for the Google Picker (Drive file chooser) |
 | `VITE_FEEDBACK_URL` | No | POST endpoint for the Feedback screen; if absent, screen shows "not configured" |
 
 ---
@@ -127,7 +128,7 @@
 3. `App.jsx` routes to `setLearned(row, true)` → optimistic local update + `markLearned()` API call
 
 **Read path:**
-1. After login, `findOrCreateWordsFile()` returns the sheet ID (from localStorage cache or Drive search)
+1. After login, `checkWordsFile()` returns the cached sheet ID (verified against Drive); if null, the setup screen is shown
 2. `useWords(sheetId, tab)` effect fires → `getWords(sheetId, tab)` fetches `A1:G` of the current language tab
 3. Rows are mapped to word objects and stored in local state; screen re-renders
 
@@ -136,7 +137,6 @@
 - HTTP errors throw `new Error('API error {status}: {body}')` — caught by callers and shown as UI messages
 - 401s trigger a silent token refresh (`trySilentSignIn`)
 - Settings read errors are silently swallowed; localStorage values are kept as fallback
-- Drive search lag: `findOrCreateWordsFile()` retries once after 2 500 ms before creating a new file
 
 ---
 
@@ -148,7 +148,8 @@ Words-PWA/
 │   ├── main.jsx              Entry point; registers service worker; renders <App> in BrowserRouter
 │   ├── App.jsx               Root component; owns all global state; defines all routes
 │   ├── auth.js               GIS token client — silent sign-in, popup sign-in, token refresh
-│   ├── sheetsApi.js          Drive + Sheets API v4 — find/create file, read/write words & settings
+│   ├── picker.js             Google Picker wrapper — opens native Drive file chooser (drive.file scope)
+│   ├── sheetsApi.js          Drive + Sheets API v4 — check/create file, read/write words & settings
 │   ├── settingsUtils.js      isWordLearned(), isWordEligibleForMode(), DEFAULT_SETTINGS
 │   ├── constants.js          M1_MAX=4, M2_MAX=8, M3_MAX=12, TOTAL_REPS=24
 │   ├── langMap.js            ISO 639-1 + 639-2 language code → name lookup; parseLangLabel()
@@ -288,33 +289,39 @@ The user can also pick any other spreadsheet via **Settings → Spreadsheet → 
 ```
 email
 profile
-https://www.googleapis.com/auth/spreadsheets
-https://www.googleapis.com/auth/drive.metadata.readonly
+https://www.googleapis.com/auth/drive.file
 ```
+
+`drive.file` grants access only to files this app created or that the user explicitly picked via the Google Picker. The app cannot see any other files in the user's Drive.
 
 ### Sign-in flow (step by step)
 
 1. **App loads** → `initAuth(onReady)` polls `window.google?.accounts?.oauth2` every 100 ms until GIS script is ready
-2. **Silent sign-in attempt:** `trySilentSignIn()` creates a token client with `prompt: ''` and calls `requestAccessToken({ prompt: '' })`
-   - **Success:** token stored in memory variable `accessToken`; `tokenExpiresAt = Date.now() + expires_in * 1000`
+2. **Silent sign-in attempt:** `trySilentSignIn()` first checks `localStorage` for a still-valid token (`words_token` + `words_token_expiry`). If valid, resolves immediately without a GIS round-trip. Otherwise creates a token client with `prompt: ''` and calls `requestAccessToken({ prompt: '' })`
+   - **Success:** token stored in `localStorage` (`words_token`, `words_token_expiry`) and in memory (`accessToken`, `tokenExpiresAt`)
    - If no saved profile in `localStorage.words_user`: fetches `https://www.googleapis.com/oauth2/v3/userinfo` and saves `{ email, name, picture }` to `words_user`
    - `setUser(getUser())` → app proceeds, `LoginScreen` is not shown
    - **Failure (no prior consent, popup closed, etc.):** `setUser(null)` → `LoginScreen` rendered
 3. **Login screen:** user clicks "Sign in with Google" → `signInWithPopup()` with `prompt: 'consent'` → GIS popup opens
 4. **After login:** same token + profile save flow as step 2; `onLogin()` callback updates root state
 5. **Token refresh:** before every API call, `refreshTokenIfNeeded()` checks if `Date.now() >= tokenExpiresAt - 30_000`. If stale, calls `trySilentSignIn()` again
-6. **Sign out:** `accessToken = null`, `tokenExpiresAt = 0`, `localStorage.removeItem('words_user')`, `google.accounts.oauth2.revoke(email)`
+6. **Sign out:** revokes the current access token via `google.accounts.oauth2.revoke(accessToken)`, clears `words_token`/`words_token_expiry`/`words_user` from localStorage
 
 ### First launch (no existing sheet)
 
-After sign-in, `findOrCreateWordsFile()` runs the discovery flow described in §6 and creates a new `db_words` spreadsheet seeded with 35 German words in 3 categories (Numbers, Greetings, Colors) and the default `_settings` values.
+After sign-in, `checkWordsFile()` looks up the cached `words_sheet_id` in localStorage and verifies it is still accessible. If no valid sheet is found (first run, or scope migration), `needsSetup` is set to `true` and `App.jsx` renders a **Setup screen** (not a route) instead of the normal app:
+
+- **"Choose from Google Drive"** — opens `openSpreadsheetPicker()` (native Drive file chooser); on selection calls `handleSheetChange(id, name)` and loads settings from the chosen file
+- **"Create new spreadsheet"** — calls `createWordsFile()` which creates `db_words` in Drive, seeds it with 34 German words in 3 categories and default `_settings`, then proceeds to HomeScreen
 
 ### localStorage keys
 
 | Key | Content | Written by |
 |---|---|---|
 | `words_user` | JSON `{ email, name, picture }` | `auth.js` after profile fetch |
-| `words_sheet_id` | Spreadsheet file ID string | `sheetsApi.js` after discovery |
+| `words_token` | OAuth 2.0 access token string | `auth.js` on every token grant |
+| `words_token_expiry` | Token expiry timestamp (ms) | `auth.js` on every token grant |
+| `words_sheet_id` | Spreadsheet file ID string | `sheetsApi.js` / `App.jsx` after setup |
 | `words_sheet_name` | Display name of the file | `App.jsx` after `getSheetFileName()` |
 | `words_lang` | Selected tab name e.g. `"ENG-DEU"` | `App.jsx` on language select |
 | `words_category` | JSON array of selected categories, or absent | `App.jsx` on category select |
@@ -413,19 +420,19 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 
 ### API methods
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `findOrCreateWordsFile()` | Drive Files list + Sheets create | Finds or creates `db_words` spreadsheet |
-| `listUserSheets()` | Drive Files list | All user Sheets, ordered by modifiedTime desc |
-| `getSheetFileName(id)` | Drive Files get | Returns display name of a file |
-| `getLanguageTabs(id)` | Sheets spreadsheets get | Returns sheet tab titles (excluding system tabs) |
-| `getWords(id, tab)` | Sheets values get `A1:G` | Reads all words from a language tab |
-| `batchUpdateWords(id, tab, updates)` | Sheets `values:batchUpdate` | Writes D:F for each changed word |
-| `markLearned(id, tab, row, learned)` | Sheets values update PUT | Writes `"TRUE"`/`"FALSE"` to cell G{row} |
-| `resetWordCounters(id, tab, row)` | Sheets values update PUT | Writes `[0,0,0,"FALSE"]` to D{row}:G{row} |
-| `readSettings(id)` | Sheets values get `_settings!A1:B10` | Reads settings tab; handles legacy format |
-| `writeSettings(id, settings)` | Sheets values update PUT `_settings!A1:B9` | Writes all 9 settings rows |
-| `seedNewSpreadsheet(id)` | Sheets `values:batchUpdate` | Writes header + 35 words + settings (called once at creation) |
+| Method | File | Endpoint | Description |
+|---|---|---|---|
+| `checkWordsFile()` | `sheetsApi.js` | Drive Files get | Returns cached `words_sheet_id` if still accessible; `null` otherwise (triggers setup screen) |
+| `createWordsFile()` | `sheetsApi.js` | Sheets create + `values:batchUpdate` | Creates `db_words` spreadsheet with ENG-DEU tab + `_settings`; seeds 34 sample words |
+| `openSpreadsheetPicker()` | `picker.js` | Google Picker API (CDN) | Opens native Drive file chooser; resolves to `{id, name}` or `null` on cancel |
+| `getSheetFileName(id)` | `sheetsApi.js` | Drive Files get | Returns display name of a file |
+| `getLanguageTabs(id)` | `sheetsApi.js` | Sheets spreadsheets get | Returns sheet tab titles (excluding system tabs) |
+| `getWords(id, tab)` | `sheetsApi.js` | Sheets values get `A1:G` | Reads all words from a language tab |
+| `batchUpdateWords(id, tab, updates)` | `sheetsApi.js` | Sheets `values:batchUpdate` | Writes D:F for each changed word |
+| `markLearned(id, tab, row, learned)` | `sheetsApi.js` | Sheets values update PUT | Writes `"TRUE"`/`"FALSE"` to cell G{row} |
+| `resetWordCounters(id, tab, row)` | `sheetsApi.js` | Sheets values update PUT | Writes `[0,0,0,"FALSE"]` to D{row}:G{row} |
+| `readSettings(id)` | `sheetsApi.js` | Sheets values get `_settings!A1:B10` | Reads settings tab; handles legacy format |
+| `writeSettings(id, settings)` | `sheetsApi.js` | Sheets values update PUT `_settings!A1:B9` | Writes all 9 settings rows |
 
 **Offline behavior:** No queue. If the network is unavailable, API calls throw and the error propagates to the UI. Local state changes (optimistic updates) persist in React state for the session but are lost on reload if the API write failed.
 
@@ -491,15 +498,16 @@ All API calls go through `request(url, options)` in `sheetsApi.js`:
 ### 10.4 WordListScreen
 
 - **Route:** `/words` — redirects to `/` if `!sheetId || !currentLang`
-- **Props:** `words`, `loading`, `categoryFilter`, `onToggleLearned`
+- **Props:** `words`, `loading`, `categoryFilter`, `onToggleLearned`, `settings`
 
 **Filtering:** `categoryFilter && categoryFilter.length > 0` → filter `words` by category; otherwise show all.
 
-**Header (sticky):** "← Back" | "Word List" title + filter label (`category name` or `"{n} categories"`) | learned count `"{learned} / {total}"` (thin spaces)
+**Header (sticky):** "← Back" | "Word List" title + filter label (`category name` or `"{n} categories"`) | two-span learned counter: `"Learned {n}"` and `"Total {n}"`
 
 **Word item:**
 - Word text | translation text
-- Progress: if learned → `<CheckIcon size={18}>` ; otherwise `"{m1+m2+m3} / 24"` (thin spaces around slash, TOTAL_REPS=24)
+- **Progress bars** (shown when not learned): one mini bar per enabled mode — red (m1), orange (m2), green (m3); fill = `min(value, mMax) / mMax * 100%`; thresholds from `settings`, not constants
+- Progress counter: if learned → `<CheckIcon size={18}>` ; otherwise `"{progress} / {total}"` where `progress = Σ min(m, mMax)` and `total = Σ mMax` across enabled modes only
 - Eye icon (open = not learned, crossed = learned): click → `onToggleLearned(word)`
 
 **Empty states:**
@@ -542,11 +550,11 @@ Categories are derived from `words[].category` (non-empty values), sorted alphab
 
 - **Route:** `/settings`
 - **Props:** `settings`, `onChange`, `sheetId`, `sheetName`, `onChangeSheet`
-- **State:** `toast` (string | null), `pickerOpen`, `pickerFiles`, `pickerLoading`
+- **State:** `toast` (string | null), `setupBusy` (bool)
 
 **Sections:**
 
-*Spreadsheet:* Shows `sheetName ?? 'db_words'` with "Google Sheets data source" sub-text. "Change" button opens inline picker listing all Drive Sheets (via `listUserSheets()`). Selecting a different file calls `onChangeSheet(id, name)` which updates localStorage and re-triggers settings read.
+*Spreadsheet:* Shows `sheetName ?? 'db_words'` with "Google Sheets data source" sub-text. "Change" button calls `openSpreadsheetPicker()` (native Google Drive file chooser). On file selection calls `onChangeSheet(id, name)` which updates localStorage and re-triggers settings read.
 
 *Session:* Number input for `stepsPerSession` — commits on `blur`, resets to default if `parseInt` returns falsy or ≤ 0.
 
@@ -699,7 +707,11 @@ Dark theme is applied automatically via `@media (prefers-color-scheme: dark)`.
 | `/feedback` | `FeedbackScreen` | — | Always accessible after login |
 | `*` | — | — | Redirects to `/` |
 
-No deeplink URI scheme. Standard browser history routing (`BrowserRouter`). The service worker handles navigation requests network-first with fallback to `/index.html`, so direct URL access to any route works after the shell is cached.
+No deeplink URI scheme. Standard browser history routing (`BrowserRouter` with `basename={import.meta.env.BASE_URL}` — resolves to `/Words_PWA/` on GitHub Pages). The service worker handles navigation requests network-first with a base-aware fallback to `index.html`, so direct URL access to any route works after the shell is cached.
+
+**App-level guards (not routes):** before routes are rendered, `App.jsx` checks two conditions in order:
+1. `user === null` → renders `LoginScreen` (Google sign-in)
+2. `needsSetup === true` → renders `SetupScreen` inline (create new spreadsheet or pick existing via Google Picker)
 
 ---
 
@@ -711,7 +723,7 @@ No deeplink URI scheme. Standard browser history routing (`BrowserRouter`). The 
 | `SessionScreen` | "Loading session…" centered | "All words learned!" (🎉) or "Session complete!" (✓) |
 | `WordListScreen` | "Loading…" centered | "No words found." or "No words in this category." |
 | `LanguageScreen` | "Loading…" centered | "No language sheets found." + reconnect button |
-| `SettingsScreen` (picker) | "Loading your sheets…" inside picker | "No Google Sheets found in your Drive." |
+| `SettingsScreen` | `setupBusy` spinner on "Change" while Picker opens | — |
 | `HomeScreen` | "Loading your Words sheet…" hint | — |
 
 No shimmer/skeleton animations — all loading states are plain text.
@@ -720,16 +732,18 @@ No shimmer/skeleton animations — all loading states are plain text.
 
 ## 15. Progressive Web App
 
-**Service Worker** (`dist/sw.js`, cache name `words-v1`):
+**Service Worker** (`dist/sw.js`, cache name `words-v2`):
 
 | Request type | Strategy |
 |---|---|
 | `*.googleapis.com` or `*.accounts.google.com` | Always network (never cached) |
-| Navigation (`mode === 'navigate'`) | Network-first; fallback to `/index.html` |
+| Navigation (`mode === 'navigate'`) | Network-first; base-aware fallback to `BASE + 'index.html'` |
 | App shell assets (GET) | Cache-first; on cache miss: fetch + store in cache |
 
-Install: pre-caches `/` and `/index.html`; calls `skipWaiting()`.  
-Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
+Install: pre-caches `BASE` and `BASE + 'index.html'` (where `BASE = new URL(self.registration.scope).pathname`); calls `skipWaiting()`.  
+Activate: deletes all caches except `words-v2`; calls `clients.claim()`.
+
+**Vite base:** `base: '/Words_PWA/'` in `vite.config.js` — all asset paths and the SW registration URL are relative to this prefix.
 
 **PWA Manifest** (`dist/manifest.json`):
 
@@ -738,12 +752,13 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
 | `name` | `"Words"` |
 | `short_name` | `"Words"` |
 | `description` | `"Learn vocabulary with flashcards"` |
-| `start_url` | `"/"` |
+| `start_url` | `"/Words_PWA/"` |
 | `display` | `"standalone"` |
 | `orientation` | `"portrait"` |
 | `theme_color` | `"#E07E38"` |
 | `background_color` | `"#FFFFFF"` |
-| Icons | 192×192 and 512×512 PNG, purpose `"any maskable"` |
+| `scope` | `"/Words_PWA/"` |
+| Icons | 192×192 and 512×512 PNG (relative paths), purpose `"any maskable"` |
 
 `index.html` meta: `viewport` with `user-scalable=no`, `theme-color #E07E38`, `apple-mobile-web-app-capable yes`, `apple-mobile-web-app-title Words`.
 
@@ -754,8 +769,9 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
 1. **Google Cloud project**
    - Go to [console.cloud.google.com](https://console.cloud.google.com)
    - Create a new project
-   - Enable **Google Sheets API** and **Google Drive API**
+   - Enable **Google Sheets API**, **Google Drive API**, and **Google Picker API**
    - Create an **OAuth 2.0 Client ID** (type: Web application)
+   - Create an **API key** (restrict it to the Picker API and your origin)
    - Add authorized JavaScript origins (e.g. `http://localhost:3000`, production domain)
    - Add test users under "OAuth consent screen" (app stays in "Testing" mode until published)
 
@@ -763,6 +779,7 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
    ```
    # .env  (project root, not committed)
    VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   VITE_GOOGLE_API_KEY=your-api-key
    VITE_FEEDBACK_URL=https://your-form-endpoint   # optional
    ```
 
@@ -772,11 +789,11 @@ Activate: deletes all caches except `words-v1`; calls `clients.claim()`.
    npm run dev   # http://localhost:3000
    ```
 
-4. **Build for production**
+4. **Build and deploy (GitHub Pages)**
    ```bash
    npm run build   # output → dist/
    ```
-   Deploy `dist/` to any static host (Vercel, Netlify, GitHub Pages).
+   Push to `main` — `.github/workflows/deploy.yml` builds and publishes `dist/` to the `gh-pages` branch automatically. Add `VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_API_KEY` as GitHub Actions secrets. The live URL is `https://{user}.github.io/Words_PWA/`.
 
 5. **Google Sheet (optional — auto-created on first login)**
    - App creates `db_words` in the user's Drive with sample German vocabulary
